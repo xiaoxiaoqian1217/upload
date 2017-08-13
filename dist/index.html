@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>js前端图片压缩上传</title>
+
+</head>
+<body>
+	<input type="file" id="file">
+	<div class="container"></div>
+
+</body>
+<script>
+     let fileInput=document.querySelector('#file');
+     let container=document.querySelector('.container');
+     let reader=new FileReader();
+     let img=document.createElement('img');
+     let canvas= document.createElement('canvas');
+     var context = canvas.getContext('2d');
+     let file=null;//保存文件对象
+     img.onload=function(){
+         var originWidth = this.width;
+         var originHeight = this.height;
+
+
+//         log('图片原尺寸是：' + [originWidth, originHeight].join('x'));
+
+         // 计算出目标压缩尺寸
+         var maxWidth = 400, maxHeight = 400;
+
+         // 目标尺寸
+         var targetWidth = originWidth, targetHeight = originHeight;
+
+         if (originWidth > maxWidth || originHeight > maxHeight) {
+             // 图片尺寸超过400x400的限制
+             if (originWidth / originHeight > maxWidth / maxHeight) {
+                 // 更宽，按照宽度限定尺寸
+                 targetWidth = maxWidth;
+                 targetHeight = Math.round(maxWidth * (originHeight / originWidth));
+             } else {
+                 targetHeight = maxHeight;
+                 targetWidth = Math.round(maxHeight * (originWidth / originHeight));
+             }
+
+             console.log('超过400x400的限制，图片大小限制为' + [targetWidth, targetHeight].join('x'));
+         } else {
+             console.log('图片尺寸较小，不压缩');
+         }
+
+         canvas.width = targetWidth;
+         canvas.height = targetHeight;
+
+         // 清除画布
+         context.clearRect(0, 0, targetWidth, targetHeight);
+
+         // 图片压缩
+         context.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+//         log('图片blob形式ajax上传，当前进度<span id="percent"></span>');
+         // 转为blob并上传
+         canvas.toBlob(function (blob) {
+             // 图片ajax上传
+             console.log(blob);
+             // 显示进度的元素
+             var elePercent = document.getElementById('percent');
+
+             // 上传文件名
+             var filename = encodeURIComponent(file.name).replace(/%/g, '');
+             var xhr=new XMLHttpRequest();
+              		xhr.onreadystatechange = function(e) {
+              			if (xhr.readyState == 4) {
+              				if (xhr.status == 200) {
+              					// 显示上传成功后的图片地址
+              					var response = xhr.responseText;
+
+              					if (/^http/.test(response)) {
+              						debugger;
+              						response = response.split(filename)[0] + filename;
+                                    console.log(response);
+              						log('图片上传成功，地址是：<a href="'+ response +'" target="_blank">'+ response +'</a>');
+              					} else {
+              						log(response);
+              					}
+              				}
+              			}
+              		};
+
+              		// 开始上传
+              		debugger;
+              		xhr.open("POST", '/uploadimg', true);
+              		xhr.setRequestHeader("X_FILENAME", filename);
+              		xhr.send(blob);
+
+         }, file.type || 'image/png');
+
+     };
+
+     container.appendChild(img);
+     fileInput.onchange=(e)=>{
+        file=fileInput.files[0];
+    reader.readAsDataURL(file)
+  };
+    reader.onload=function(e){
+      img.src= e.target.result
+    }
+
+</script>
+</htmlcu
